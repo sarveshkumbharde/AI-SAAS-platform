@@ -1,4 +1,4 @@
-# AI SaaS Platform – FOREVER
+# AI SaaS Platform - QuickAI
 
 A full-stack AI SaaS platform that provides both free and premium AI-powered tools for content creation and image editing. Built using the **PERN stack (PostgreSQL, Express, React, Node.js)** with role-based access control and Google Sign-In via Clerk.
 
@@ -46,7 +46,7 @@ git clone https://github.com/sarveshkumbharde/AI-SaaS-Platform.git
 cd AI-SaaS-Platform
 
 PORT=5000
-MONGO_URI=your_mongodb_connection_string
+POSTGRE_URI=your_postgresql_connection_string
 CLIPDROP_API_KEY=your_clipdrop_api_key
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
