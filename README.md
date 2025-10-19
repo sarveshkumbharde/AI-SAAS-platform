@@ -53,6 +53,18 @@ CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 GEMINI_API_KEY=your_gemini_api_key
 
+Create Postgre below table in Neon
+CREATE TABLE creations (
+  id SERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  content TEXT NOT NULL,
+  type TEXT NOT NULL,
+  publish BOOLEAN DEFAULT FALSE,
+  likes TEXT[] DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
 
 AI-SaaS-Platform/
 ├── server/             # Node.js & Express backend
