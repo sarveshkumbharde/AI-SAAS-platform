@@ -1,22 +1,17 @@
-import { useAuth, useUser } from '@clerk/clerk-react';
 import React, { useEffect, useState } from 'react'
 import { dummyPublishedCreationData } from '../assets/assets.js';
 import { Heart } from 'lucide-react';
-import axios from 'axios'; 
+import api from "../utils/axios";
 import toast from 'react-hot-toast';
-
-axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
+import { useAuth } from "../context/AuthContext";
 
 const Community = () => {
   const [creations, setCreations] = useState([]);
-  const {user} = useUser();
+const { user, isAuthenticated, isPremium, logout } = useAuth();
   const [loading, setLoading] = useState(true);
-  const {getToken} = useAuth();
   const fetchCreations = async()=>{
     try {
-      const {data} = await axios.get('api/user/get-published-creations',{
-        headers : {Authorization : `Bearer ${await getToken()}`}
-      })
+      const {data} = await api.get('api/user/get-published-creations')
       if(data.success) setCreations(data.creations);
       else toast.error(data.message);
     } catch (error) {
@@ -26,9 +21,7 @@ const Community = () => {
   }
   const imageLikeToggle = async(id)=>{
     try {
-      const {data} = await axios.post('api/user/toggle-like-creations', {id},{
-        headers: {Authorization: `Bearer ${await getToken()}`}
-      })
+      const {data} = await api.post('api/user/toggle-like-creations', {id})
       if(data.success){ 
         toast.success(data.message);
         fetchCreations();

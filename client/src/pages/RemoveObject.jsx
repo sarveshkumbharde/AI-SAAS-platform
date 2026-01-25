@@ -1,18 +1,14 @@
 import React, { useState } from "react";
 import { Scissors, Sparkles } from "lucide-react";
-import axios from "axios";
-import { useAuth } from "@clerk/clerk-react";
+import api from "../utils/axios";
 import toast from "react-hot-toast";
 
-axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
 const RemoveObject = () => {
   const [input, setInput] = useState("");
   const [object, setObject] = useState("");
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState("");
-
-  const { getToken } = useAuth();
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
@@ -27,10 +23,9 @@ const RemoveObject = () => {
       formData.append("image", input);
       formData.append("object", object);
 
-      const { data } = await axios.post(
+      const { data } = await api.post(
         "/api/ai/remove-image-object",
         formData,
-        { headers: { Authorization: `Bearer ${await getToken()}` } }
       );
 
       if (data.success) {

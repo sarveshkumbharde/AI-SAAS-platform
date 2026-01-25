@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
 import AiTools from '../components/AiTools'
 import Testimonials from '../components/Testimonials'
-import Plan from '../components/Plan'
+import Plan from './Plan'
 import Footer from '../components/Footer'
 
 const Home = () => {

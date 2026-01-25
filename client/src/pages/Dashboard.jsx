@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from 'react'
 import { dummyCreationData } from '../assets/assets';
 import { Gem, Sparkles } from 'lucide-react';
-import { Protect, useAuth } from '@clerk/clerk-react';
+// import { Protect, useAuth } from '@clerk/clerk-react';
 import CreationItem from '../components/CreationItem';
-import axios from 'axios';
+// import axios from 'axios';
+import api from "../utils/axios";
 import toast from 'react-hot-toast';
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
   const [creations, setCreations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const {getToken} = useAuth();
+  const {isPremium} = useAuth();
+  // const {getToken} = useAuth();
 
   const getDashboardData = async()=>{
     try {
-      const {data} = await axios.get('/api/user/get-user-creations',{
-        headers: {Authorization: `Bearer ${await getToken()}`}
-      });
+      const {data} = await api.get('/api/user/get-user-creations');
       if(data.success){
         setCreations(data.creations);
       }
@@ -49,7 +50,8 @@ const Dashboard = () => {
           <div className='text-slate-600'>
             <p className='text-sm'>Active Plan</p>
             <h2 className='text-xl font-semibold'>
-              <Protect plan='premium' fallback='Free'>Premium</Protect>           
+              {/* <Protect plan='premium' fallback='Free'>Premium</Protect>            */}
+              {isPremium ? "Premium" : "Free"}
             </h2>
           </div>
           <div className='w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF61C5] to-[#9E53EE] text-white flex-justify-center items-center'>

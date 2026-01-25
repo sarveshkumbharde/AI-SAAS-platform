@@ -1,17 +1,13 @@
 import React, {useState} from "react";
 import { Sparkles, Edit, Hash, Eraser } from "lucide-react";
-import axios from 'axios';
-import { useAuth } from "@clerk/clerk-react";
+import api from "../utils/axios";
 import toast from 'react-hot-toast'
 
-axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
 const RemoveBackground = () => {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [content, setContent] = useState('');
-
-    const {getToken} = useAuth();
   
     const onSubmitHandler = async (e) => {
       e.preventDefault();
@@ -19,7 +15,7 @@ const RemoveBackground = () => {
       setLoading(true);
       const formData = new FormData()
       formData.append('image', input);
-      const {data} = await axios.post('/api/ai/remove-image-background', formData, {headers:{Authorization: `Bearer ${await getToken()}`}})
+      const {data} = await api.post('/api/ai/remove-image-background', formData)
 
       if(data.success){
         setContent(data.content);

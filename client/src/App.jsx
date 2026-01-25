@@ -10,20 +10,23 @@ import RemoveBackground from './pages/RemoveBackground';
 import RemoveObject from './pages/RemoveObject';
 import ReviewResume from './pages/ReviewResume';
 import Community from './pages/Community';
-import { useAuth } from '@clerk/clerk-react';
+import Plan from './pages/Plan';
+import { useAuth } from "./context/AuthContext";
+import OAuthSuccess from './pages/OAuthSuccess';
 import { useEffect } from 'react';
 import {Toaster} from 'react-hot-toast';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 const App = () => {
-  const {getToken} = useAuth();
-  useEffect(()=>{
-    getToken().then((token=>console.log(token)));
-  },[])
   return (
     <div>
       <Toaster/>
       <Routes>
         <Route path='/' element={<Home />} />
+        <Route path="/plan" element={<Plan />} />
+        <Route path="/oauth-success" element={<OAuthSuccess />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+
         <Route path='/ai' element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path='write-article' element={<WriteArticle />} />
@@ -33,6 +36,7 @@ const App = () => {
           <Route path='remove-object' element={<RemoveObject />} />
           <Route path='review-resume' element={<ReviewResume />} />
           <Route path='community' element={<Community />} />
+          <Route path='plan' element={<Plan />} />
         </Route>
       </Routes>
     </div>

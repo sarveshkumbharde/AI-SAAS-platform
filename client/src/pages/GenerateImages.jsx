@@ -1,10 +1,7 @@
 import { Edit, Hash, Sparkles, Image } from "lucide-react";
 import React, { useState } from "react";
-import axios from 'axios';
-import { useAuth } from "@clerk/clerk-react";
+import api from "../utils/axios";
 import toast from 'react-hot-toast'
-
-axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
 const GenerateImages = () => {
   const ImageStyle = [
@@ -23,14 +20,12 @@ const GenerateImages = () => {
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState('');
 
-  const {getToken} = useAuth();
-
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
       const prompt = `Generate an image of ${input} in the style ${selectedStyle}`;
-      const {data} = await axios.post('/api/ai/generate-image', {prompt, publish}, {headers:{Authorization: `Bearer ${await getToken()}`}})
+      const {data} = await api.post('/api/ai/generate-image', {prompt, publish})
 
       if(data.success){
         setContent(data.content);

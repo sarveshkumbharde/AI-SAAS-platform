@@ -1,10 +1,109 @@
-// controllers/userController.js
 import sql from "../configs/db.js";
 import { cache } from '../utils/cache.js';
+import jwt from "jsonwebtoken";
+import qs from 'qs'
+import axios from 'axios'
+
+export const startGoogleOAuth = async(req, res)=>{
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+    response_type: "code",
+    scope: "openid email profile",
+    prompt: "consent",
+  });
+
+  res.redirect(
+    `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+  );
+}
+
+export const handleGoogleOAuthCallback = async (req, res) => {
+  console.log("OAuth callback hit");
+
+  try {
+    const { code } = req.query;
+    console.log("OAuth code received:", !!code);
+
+    console.log("OAuth: before token exchange");
+
+    const tokenRes = await axios.post(
+      "https://oauth2.googleapis.com/token",
+      qs.stringify({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        grant_type: "authorization_code",
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        timeout: 5000, // 🔥 IMPORTANT
+      }
+    );
+
+    console.log("OAuth: after token exchange");
+
+    const { id_token } = tokenRes.data;
+    const decoded = jwt.decode(id_token);
+    const { sub, email } = decoded;
+
+    console.log("OAuth: before DB lookup");
+
+    let [user] = await sql`
+      SELECT * FROM users
+      WHERE provider = 'google' AND provider_id = ${sub}
+    `;
+
+    console.log("OAuth: after DB lookup");
+
+    if (!user) {
+      console.log("OAuth: creating user");
+      [user] = await sql`
+        INSERT INTO users (email, provider, provider_id)
+        VALUES (${email}, 'google', ${sub})
+        RETURNING *
+      `;
+    }
+
+    console.log("OAuth: before JWT sign");
+
+    const appToken = jwt.sign(
+      {
+        id: user.id,
+        plan: user.plan,
+        expires_at: user.expires_at,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "30m" }
+    );
+
+    console.log("OAuth: redirecting to frontend");
+
+    res.redirect(
+      `${process.env.FRONTEND_URL}/oauth-success?token=${appToken}`
+    );
+  } catch (err) {
+    console.error("OAuth error:", err.message);
+    res.status(500).json({ message: "OAuth failed" });
+  }
+};
+
+export const getUser = async(req, res) => {
+  const [user] = await sql`
+    SELECT id, plan, expires_at
+    FROM users
+    WHERE id = ${req.user.id}
+  `;
+  res.json(user);
+}
+
 
 export const getUserCreations = async (req, res) => {
   try {
-    const { userId } = req.auth;
+    const { userId } = req.user;
     const cacheKey = `user_creations:${userId}`;
     
     // Check cache
@@ -68,7 +167,7 @@ export const getPublishedCreations = async(req,res)=>{
 
 export const toggleLikeCreation = async(req,res)=>{
     try {
-        const {userId} = req.auth;
+        const {userId} = req.user;
         const {id} = req.body;
         
         const [creation] = await sql`SELECT * FROM creations WHERE id=${id}`
