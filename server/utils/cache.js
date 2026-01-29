@@ -7,7 +7,6 @@ export const cache = {
       await redisClient.setEx(key, expireInSeconds, JSON.stringify(value));
     } catch (error) {
       console.log('Cache set error:', error);
-      // Don't throw error - fail silently
     }
   },
 
@@ -29,15 +28,4 @@ export const cache = {
     }
   },
 
-  // Clear cache by pattern (useful for user data)
-  // clearPattern: async (pattern) => {
-  //   try {
-  //     const keys = await redisClient.keys(pattern);
-  //     if (keys.length > 0) {
-  //       await redisClient.del(keys);
-  //     }
-  //   } catch (error) {
-  //     console.log('Cache clear pattern error:', error);
-  //   }
-  // }
 };

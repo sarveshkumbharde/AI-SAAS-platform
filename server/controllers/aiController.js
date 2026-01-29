@@ -32,7 +32,7 @@ export const generateArticle = async (req, res) => {
   AND created_at > now() - interval '1 day'
 `;
 
-    if (!isPremiumUser && free_usage >= 10) {
+    if (!isPremiumUser(req.user) && free_usage >= 10) {
       return res.json({
         success: false,
         message: "Limit reached. Upgrade to continue",
@@ -86,7 +86,6 @@ export const generateArticle = async (req, res) => {
 
 export const generateBlogTitle = async (req, res) => {
   try {
-
     const { id: userId, plan, expires_at } = req.user;
     const { prompt, length } = req.body;
 
@@ -97,7 +96,7 @@ export const generateBlogTitle = async (req, res) => {
   AND created_at > now() - interval '1 day'
 `;
 
-    if (!isPremiumUser && free_usage >= 10) {
+    if (!isPremiumUser(req.user) && free_usage >= 10) {
       return res.json({
         success: false,
         message: "Limit reached. Upgrade to continue",
@@ -150,11 +149,10 @@ export const generateBlogTitle = async (req, res) => {
 
 export const resumeReview = async (req, res) => {
   try {
-
     const { id: userId, plan, expires_at } = req.user;
     const resume = req.file;
 
-    if (!isPremiumUser)
+    if (!isPremiumUser(req.user))
       return res.json({
         success: false,
         message: "You are not authorized to use this feature",
@@ -221,11 +219,10 @@ export const resumeReview = async (req, res) => {
 // Image functions - cache Cloudinary URLs
 export const generateImage = async (req, res) => {
   try {
-
     const { id: userId, plan, expires_at } = req.user;
     const { prompt, length, publish } = req.body;
 
-    if (isPremiumUser)
+    if (isPremiumUser(req.user))
       return res.json({
         success: false,
         message: "You are not authorized to use this feature",
@@ -305,7 +302,7 @@ export const removeImageBackground = async (req, res) => {
     const { id: userId, plan, expires_at } = req.user;
     const image = req.file;
 
-    if (!isPremiumUser)
+    if (!isPremiumUser(req.user))
       return res.json({
         success: false,
         message: "You are not authorized to use this feature",
@@ -363,7 +360,7 @@ export const removeImageObject = async (req, res) => {
     const image = req.file;
     const { object } = req.body;
 
-    if (!isPremiumUser)
+    if (!isPremiumUser(req.user))
       return res.json({
         success: false,
         message: "You are not authorized to use this feature",

@@ -12,7 +12,7 @@ const PaymentSuccess = () => {
   useEffect(() => {
     const syncPlan = async () => {
       try {
-        await refreshUser(); // fetch /api/user/me
+        await refreshUser(); 
         setLoading(false);
       } catch (err) {
         setError("Failed to verify subscription status");

@@ -1,22 +1,22 @@
 import sql from "../configs/db.js";
-import { cache } from '../utils/cache.js';
+import { cache } from "../utils/cache.js";
 import jwt from "jsonwebtoken";
-import qs from 'qs'
-import axios from 'axios'
+import qs from "qs"; //qs is a library that converts a JavaScript object into a properly encoded form string.
+import axios from "axios";
 
-export const startGoogleOAuth = async(req, res)=>{
+export const startGoogleOAuth = async (req, res) => {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID,
     redirect_uri: process.env.GOOGLE_REDIRECT_URI,
     response_type: "code",
-    scope: "openid email profile",
+    scope: "openid email profile",  //openid is used to get id_token (authentication), without it, only authorization is possible
     prompt: "consent",
   });
 
   res.redirect(
-    `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+    `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
   );
-}
+};
 
 export const handleGoogleOAuthCallback = async (req, res) => {
   console.log("OAuth callback hit");
@@ -38,16 +38,19 @@ export const handleGoogleOAuthCallback = async (req, res) => {
       }),
       {
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/x-www-form-urlencoded", //enocde as form data, not JSON
         },
         timeout: 5000, // 🔥 IMPORTANT
-      }
+      },
     );
 
     console.log("OAuth: after token exchange");
 
     const { id_token } = tokenRes.data;
     const decoded = jwt.decode(id_token);
+    if (!decoded || !decoded.sub) {
+      throw new Error("Invalid Google ID token");
+    }
     const { sub, email } = decoded;
 
     console.log("OAuth: before DB lookup");
@@ -77,43 +80,58 @@ export const handleGoogleOAuthCallback = async (req, res) => {
         expires_at: user.expires_at,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "30m" }
+      { expiresIn: "30m" },
     );
 
     console.log("OAuth: redirecting to frontend");
 
-    res.redirect(
-      `${process.env.FRONTEND_URL}/oauth-success?token=${appToken}`
-    );
+    res.cookie("auth_token", appToken, {
+      httpOnly: true,
+      secure: true, // true in production (HTTPS)
+      sameSite: "lax", // or "none" if cross-site
+      maxAge: 30 * 60 * 1000, // 30 minutes
+    });
+
+    res.redirect(`${process.env.FRONTEND_URL}/oauth-success`);
   } catch (err) {
     console.error("OAuth error:", err.message);
     res.status(500).json({ message: "OAuth failed" });
   }
 };
 
-export const getUser = async(req, res) => {
+export const getUser = async (req, res) => {
   const [user] = await sql`
     SELECT id, plan, expires_at
     FROM users
     WHERE id = ${req.user.id}
   `;
   res.json(user);
-}
+};
 
+export const logout = (req, res) => {
+  res.clearCookie("auth_token", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 30 * 60 * 1000,
+  });
+
+  res.json({ success: true });
+};
 
 export const getUserCreations = async (req, res) => {
   try {
     const { userId } = req.user;
     const cacheKey = `user_creations:${userId}`;
-    
+
     // Check cache
     const cachedData = await cache.get(cacheKey);
     if (cachedData) {
-      console.log('✅ Serving user creations from cache');
-      return res.json({ 
-        success: true, 
+      console.log("✅ Serving user creations from cache");
+      return res.json({
+        success: true,
         creations: cachedData,
-        cached: true 
+        cached: true,
       });
     }
 
@@ -125,78 +143,79 @@ export const getUserCreations = async (req, res) => {
     // Cache for 5 minutes (frequently updated data)
     await cache.set(cacheKey, creations, 5 * 60);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       creations,
-      cached: false 
+      cached: false,
     });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
 };
 
-export const getPublishedCreations = async(req,res)=>{
-    try {
-        const cacheKey = 'published_creations';
-        
-        // Check cache
-        const cachedData = await cache.get(cacheKey);
-        if (cachedData) {
-          console.log('✅ Serving published creations from cache');
-          return res.json({ 
-            success: true, 
-            creations: cachedData,
-            cached: true 
-          });
-        }
+export const getPublishedCreations = async (req, res) => {
+  try {
+    const cacheKey = "published_creations";
 
-        const creations = await sql`SELECT * FROM creations WHERE publish=true ORDER BY created_at DESC`;
-        
-        // Cache for 2 minutes (community page data)
-        await cache.set(cacheKey, creations, 2 * 60);
-        
-        res.json({
-          success:true, 
-          creations,
-          cached: false
-        });
-    } catch (error) {
-        res.json({success:false, message:error.message})
+    // Check cache
+    const cachedData = await cache.get(cacheKey);
+    if (cachedData) {
+      console.log("✅ Serving published creations from cache");
+      return res.json({
+        success: true,
+        creations: cachedData,
+        cached: true,
+      });
     }
-}
 
-export const toggleLikeCreation = async(req,res)=>{
-    try {
-        const {userId} = req.user;
-        const {id} = req.body;
-        
-        const [creation] = await sql`SELECT * FROM creations WHERE id=${id}`
+    const creations =
+      await sql`SELECT * FROM creations WHERE publish=true ORDER BY created_at DESC`;
 
-        if(!creation) return res.json({success:false, message:"Creation not found"});
+    // Cache for 2 minutes (community page data)
+    await cache.set(cacheKey, creations, 2 * 60);
 
-        const currentLikes = creation.likes;
-        const userIdStr = userId.toString();
-        let updatedLikes;
-        let message;
+    res.json({
+      success: true,
+      creations,
+      cached: false,
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
 
-        if(currentLikes.includes(userIdStr)){
-            updatedLikes = currentLikes.filter((user)=>user!==userIdStr);
-            message = 'Creation unliked';
-        }
-        else{
-            updatedLikes = [...currentLikes, userIdStr];
-            message = 'Creation liked';
-        }
+export const toggleLikeCreation = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { id } = req.body;
 
-        const formattedArray = `{${updatedLikes.join(',')}}`;
+    const [creation] = await sql`SELECT * FROM creations WHERE id=${id}`; //destructuring works because query returns only one row, otherwise it fails
 
-        await sql`UPDATE creations SET likes = ${formattedArray}::text[] WHERE id=${id}`;
+    if (!creation)
+      return res.json({ success: false, message: "Creation not found" });
 
-        // Clear relevant caches when likes change
-        await cache.del(`user_creations:${userId}`);
+    const currentLikes = creation.likes;
+    const userIdStr = userId.toString();
+    let updatedLikes;
+    let message;
 
-        res.json({success:true, message})
-    } catch (error) {
-        res.json({success:false, message: error.message});
+    if (currentLikes.includes(userIdStr)) {
+      updatedLikes = currentLikes.filter((user) => user !== userIdStr);
+      message = "Creation unliked";
+    } else {
+      updatedLikes = [...currentLikes, userIdStr];
+      message = "Creation liked";
     }
-}
+
+    const formattedArray = `{${updatedLikes.join(",")}}`;
+
+    await sql`UPDATE creations SET likes = ${formattedArray}::text[] WHERE id=${id}`;
+
+    // Clear relevant caches when likes change
+    await cache.del(`user_creations:${userId}`);
+
+    res.json({ success: true, message });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};

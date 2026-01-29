@@ -33,3 +33,84 @@ Thumbs.db
 *.env.development.local
 *.env.test.local
 *.env.production.local
+
+
+“I built a multi-service AI SaaS platform where authentication, billing, and usage limits are handled entirely on 
+the backend using custom OAuth, JWTs, Stripe webhooks, Redis caching, and rate limiting.”
+
+“Instead of using Clerk or Auth0, I implemented Google OAuth myself using the Authorization Code flow. 
+The backend exchanges the OAuth code, creates or fetches the user, and issues a JWT.
+
+The JWT is treated as a session snapshot, not the source of truth. Actual permissions like plan and 
+expiry always come from the database.”
+
+Subscription and Billing
+“Subscriptions are implemented using Stripe Checkout and Webhooks. The frontend never updates subscription state.
+
+After a successful payment, Stripe sends a webhook, and the backend updates the user’s plan and expiry in the database. 
+The webhook is the only source of truth.”
+
+“I use a lazy-expiry model. When a premium plan expires, access is revoked based on time comparison, not a scheduled job. 
+This avoids cron jobs and reduces complexity.”
+
+Usage Limits & AI Protection
+“All usage limits are enforced on the backend. Free users are limited by request count, while premium users bypass limits.
+
+The frontend never decides access — it only reacts to backend responses.”
+
+Redis Caching (performance & cost awareness)
+How to explain:
+
+“Since AI APIs are expensive and deterministic for the same input, I cache AI responses in Redis.
+
+This reduces response time significantly and prevents redundant API calls, lowering operational cost.”
+
+Rate Limiting & Abuse Prevention
+How to explain:
+
+“I added rate limiting at the API layer to prevent abuse and accidental overload.
+
+Authenticated routes are protected differently from public routes like OAuth and webhooks.”
+
+
+If they ask: “What was the hardest part?”
+Best possible answer:
+
+“Webhook handling and auth state synchronization.
+
+Understanding that JWTs don’t update automatically and designing a clean refresh mechanism without breaking security 
+was the most challenging part.”
+
+“What would you improve?”
+
+Say one or two, not five:
+
+“I’d add refresh tokens for long-lived sessions and integrate Stripe’s customer portal for subscription management.”
+
+OAuth flow
+
+User initiates login (“Get started”)
+
+Backend redirects user to Google
+
+User logs in at Google
+
+Google sends a code back
+
+Backend exchanges code for tokens
+
+Backend checks if user exists
+
+Backend creates user if needed
+
+Backend issues its own JWT
+
+
+
+Stripe payment flow
+
+1. Frontend clicks 'Upgrade to premium'
+2. Backend creates checkout session
+3. User completes payment on stripe
+4. Payment success is verified using webhook.
+5. Plan is updated to premium

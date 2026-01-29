@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { dummyCreationData } from '../assets/assets';
 import { Gem, Sparkles } from 'lucide-react';
-// import { Protect, useAuth } from '@clerk/clerk-react';
 import CreationItem from '../components/CreationItem';
-// import axios from 'axios';
 import api from "../utils/axios";
 import toast from 'react-hot-toast';
 import { useAuth } from "../context/AuthContext";
@@ -12,7 +10,6 @@ const Dashboard = () => {
   const [creations, setCreations] = useState([]);
   const [loading, setLoading] = useState(true);
   const {isPremium} = useAuth();
-  // const {getToken} = useAuth();
 
   const getDashboardData = async()=>{
     try {

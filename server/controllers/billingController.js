@@ -14,7 +14,7 @@ export const createCheckoutSession = async (req, res) => {
         {
           price: process.env.STRIPE_PRICE_ID, // yearly premium
           quantity: 1,
-        },
+        }, 
       ],
       metadata: {
         userId: String(userId),

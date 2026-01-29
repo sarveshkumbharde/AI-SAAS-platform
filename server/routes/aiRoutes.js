@@ -18,10 +18,10 @@ aiRouter.post('/generate-blog-title', requireAuth, aiTextLimiter, generateBlogTi
 aiRouter.post('/generate-image', requireAuth, imageProcessingLimiter, generateImage);
 
 // Image Processing - Strict limits
-aiRouter.post('/remove-image-background', upload.single('image'), requireAuth, imageProcessingLimiter, removeImageBackground);
-aiRouter.post('/remove-image-object', upload.single('image'), requireAuth, imageProcessingLimiter, removeImageBackground);
+aiRouter.post('/remove-image-background', requireAuth, imageProcessingLimiter, upload.single('image'), removeImageBackground);
+aiRouter.post('/remove-image-object', requireAuth, imageProcessingLimiter, upload.single('image'), removeImageBackground);
 
 // Resume Review - Moderate limits
-aiRouter.post('/resume-review', upload.single('resume'), requireAuth, resumeReviewLimiter, resumeReview);
+aiRouter.post('/resume-review', requireAuth, resumeReviewLimiter, upload.single('resume'), resumeReview);
 
 export default aiRouter;

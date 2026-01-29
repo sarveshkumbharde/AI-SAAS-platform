@@ -5,8 +5,11 @@ import AiTools from '../components/AiTools'
 import Testimonials from '../components/Testimonials'
 import Plan from './Plan'
 import Footer from '../components/Footer'
+import { useAuth } from '../context/AuthContext'
 
 const Home = () => {
+  const {user} = useAuth();
+  console.log("user", user)
   return (
     <>
       <Navbar />

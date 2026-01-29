@@ -8,7 +8,6 @@ const Plan = () => {
 
   const upgrade = async () => {
     try {
-      const token = localStorage.getItem("token");
       const { data } = await api.post("/billing/create-checkout-session");
       window.location.href = data.url;
     } catch (err) {
