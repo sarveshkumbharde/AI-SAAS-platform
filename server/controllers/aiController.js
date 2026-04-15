@@ -6,10 +6,11 @@ import fs from "fs";
 import cloudinary from "cloudinary";
 import pdf from "pdf-parse/lib/pdf-parse.js";
 import { cache } from "../utils/cache.js";
+import crypto from "crypto";
 
 const AI = new OpenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+  apiKey: "ollama", // dummy
+  baseURL: "http://localhost:11434/v1",
 });
 
 const isPremiumUser = (user) => {
@@ -40,7 +41,11 @@ export const generateArticle = async (req, res) => {
     }
 
     // Create cache key (shorter and more efficient)
-    const cacheKey = `article:${userId}:${Buffer.from(prompt).toString("base64").slice(0, 30)}`;
+    // const cacheKey = `article:${userId}:${Buffer.from(prompt).toString("base64").slice(0, 30)}`;
+
+    const promptHash = crypto.createHash("md5").update(prompt + length).digest("hex")
+
+    const cacheKey = `article:${userId}:${promptHash}`;
 
     // Check cache first
     const cachedArticle = await cache.get(cacheKey);
@@ -55,7 +60,7 @@ export const generateArticle = async (req, res) => {
 
     // If not cached, call Gemini API
     const response = await AI.chat.completions.create({
-      model: "gemini-2.0-flash",
+      model: "llama3",
       messages: [
         {
           role: "user",
@@ -104,7 +109,10 @@ export const generateBlogTitle = async (req, res) => {
     }
 
     // Cache key for blog titles
-    const cacheKey = `blog_title:${userId}:${Buffer.from(prompt).toString("base64").slice(0, 30)}`;
+    // const cacheKey = `blog_title:${userId}:${Buffer.from(prompt).toString("base64").slice(0, 30)}`;
+
+    const promptHash = crypto.createHash("md5").update(prompt).digest("hex");
+    const cacheKey = `blog_title:${userId}:${promptHash}`;
 
     // Check cache
     const cachedTitle = await cache.get(cacheKey);
@@ -118,7 +126,7 @@ export const generateBlogTitle = async (req, res) => {
     }
 
     const response = await AI.chat.completions.create({
-      model: "gemini-2.0-flash",
+      model: "llama3",
       messages: [
         {
           role: "user",
@@ -130,6 +138,7 @@ export const generateBlogTitle = async (req, res) => {
     });
 
     const content = response.choices[0].message.content;
+
 
     await sql`INSERT INTO creations (user_id, prompt, content, type)
     VALUES (${userId}, ${prompt}, ${content}, 'blog-title')`;
@@ -169,9 +178,7 @@ export const resumeReview = async (req, res) => {
     const pdfData = await pdf(dataBuffer);
 
     // Create cache key based on resume content hash
-    const resumeHash = Buffer.from(pdfData.text)
-      .toString("base64")
-      .slice(0, 30);
+    const resumeHash = crypto.createHash("md5").update(pdfData.text).digest("hex")
     const cacheKey = `resume_review:${userId}:${resumeHash}`;
 
     // Check cache
@@ -188,7 +195,7 @@ export const resumeReview = async (req, res) => {
     const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, areas for improvements. Resume Content:\n\n${pdfData.text}`;
 
     const response = await AI.chat.completions.create({
-      model: "gemini-2.0-flash",
+      model: "llama3",
       messages: [
         {
           role: "user",
@@ -199,6 +206,7 @@ export const resumeReview = async (req, res) => {
       max_tokens: 1000,
     });
     const content = response.choices[0].message.content;
+
 
     await sql`INSERT INTO creations (user_id, prompt, content, type)
     VALUES (${userId}, 'Review the uploaded resume', ${content}, 'resume-review')`;
@@ -277,8 +285,6 @@ export const generateImage = async (req, res) => {
   }
 };
 
-// Add these utility functions for image caching
-import crypto from "crypto";
 
 // Helper to create cache key from file
 const createImageCacheKey = (userId, file, additionalData = "") => {

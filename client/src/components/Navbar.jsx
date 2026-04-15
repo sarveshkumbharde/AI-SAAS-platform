@@ -6,9 +6,10 @@ import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isPremium, logout } = useAuth();
+  const { isAuthenticated, isPremium, logout, user } = useAuth();
 
   console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
+  if (user) console.log(user.picture);
 
   return (
     <div className="fixed z-50 w-full backdrop-blur-2xl flex items-center justify-between py-3 px-4 sm:px-20 xl:px-32">
@@ -19,7 +20,7 @@ const Navbar = () => {
         onClick={() => navigate("/")}
       />
 
-      {!isAuthenticated ? (
+      {!user ? (
         <button
           onClick={() =>
             (window.location.href = "http://localhost:3000/api/user/google")
@@ -29,15 +30,11 @@ const Navbar = () => {
           Get Started <ArrowRight className="w-4 h-4" />
         </button>
       ) : (
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium">
-            {isPremium ? "Premium" : "Free"} Plan
-          </span>
-          <LogOut
-            onClick={logout}
-            className="w-5 cursor-pointer text-gray-500 hover:text-black"
-          />
-        </div>
+        <img
+          src={user.picture}
+          alt="profile"
+          style={{ width: "40px", height: "40px" }}
+        />
       )}
     </div>
   );

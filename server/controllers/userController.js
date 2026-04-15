@@ -5,11 +5,12 @@ import qs from "qs"; //qs is a library that converts a JavaScript object into a 
 import axios from "axios";
 
 export const startGoogleOAuth = async (req, res) => {
+  //starting OAuth flow
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID,
     redirect_uri: process.env.GOOGLE_REDIRECT_URI,
     response_type: "code",
-    scope: "openid email profile",  //openid is used to get id_token (authentication), without it, only authorization is possible
+    scope: "openid email profile", //openid is used to get id_token (authentication), without it, only authorization is possible
     prompt: "consent",
   });
 
@@ -19,6 +20,7 @@ export const startGoogleOAuth = async (req, res) => {
 };
 
 export const handleGoogleOAuthCallback = async (req, res) => {
+  //handling google's response (exchange code with id_token)
   console.log("OAuth callback hit");
 
   try {
@@ -51,7 +53,7 @@ export const handleGoogleOAuthCallback = async (req, res) => {
     if (!decoded || !decoded.sub) {
       throw new Error("Invalid Google ID token");
     }
-    const { sub, email } = decoded;
+    const { sub, email, picture } = decoded;
 
     console.log("OAuth: before DB lookup");
 
@@ -72,12 +74,13 @@ export const handleGoogleOAuthCallback = async (req, res) => {
     }
 
     console.log("OAuth: before JWT sign");
-
+    console.log(picture);
     const appToken = jwt.sign(
       {
         id: user.id,
         plan: user.plan,
         expires_at: user.expires_at,
+        picture,
       },
       process.env.JWT_SECRET,
       { expiresIn: "30m" },
@@ -87,7 +90,7 @@ export const handleGoogleOAuthCallback = async (req, res) => {
 
     res.cookie("auth_token", appToken, {
       httpOnly: true,
-      secure: true, // true in production (HTTPS)
+      secure: false, // true in production (HTTPS)
       sameSite: "lax", // or "none" if cross-site
       maxAge: 30 * 60 * 1000, // 30 minutes
     });
@@ -100,11 +103,16 @@ export const handleGoogleOAuthCallback = async (req, res) => {
 };
 
 export const getUser = async (req, res) => {
-  const [user] = await sql`
+  const [dbUser] = await sql`
     SELECT id, plan, expires_at
     FROM users
     WHERE id = ${req.user.id}
   `;
+  console.log("picture", req.user.picture);
+  const user = {
+    ...dbUser,
+    picture: req.user.picture, // 🔥 THIS is what was missing
+  };
   res.json(user);
 };
 

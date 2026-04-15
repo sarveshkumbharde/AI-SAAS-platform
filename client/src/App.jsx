@@ -10,6 +10,7 @@ import RemoveBackground from './pages/RemoveBackground';
 import RemoveObject from './pages/RemoveObject';
 import ReviewResume from './pages/ReviewResume';
 import Community from './pages/Community';
+import Navbar from './components/Navbar';
 import Plan from './pages/Plan';
 import { useAuth } from "./context/AuthContext";
 import OAuthSuccess from './pages/OAuthSuccess';
@@ -42,6 +43,7 @@ const App = () => {
             )
           }
         >
+          <Route path="navbar" element={<Navbar />} />
           <Route index element={<Dashboard />} />
           <Route path="write-article" element={<WriteArticle />} />
           <Route path="blog-titles" element={<BlogTitles />} />

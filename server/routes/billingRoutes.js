@@ -2,9 +2,7 @@ import express from 'express';
 import { stripeWebhook, createCheckoutSession } from "../controllers/billingController.js";
 import { requireAuth } from "../middlewares/auth.js";
 
-
 const router = express.Router();
-
 
 router.post("/create-checkout-session", requireAuth, createCheckoutSession)
 

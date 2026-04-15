@@ -10,7 +10,7 @@ export const requireAuth = (req, res, next) => {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // { id, plan, expires_at }
+    req.user = payload; // { id, plan, expires_at, picture }
     next();
   } catch (err) {
     console.error("JWT verify error:", err.message);

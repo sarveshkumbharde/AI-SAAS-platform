@@ -1,0 +1,98 @@
+I built a multiservice AI platform where users access services like Article generation, Blog generation, 
+Image generation, Background removal, Object removal, resume review. It is plan-based access control system where free user gets 
+10 free usage daily for 2 services. Premium user gets unlimited usage till 1 year. 
+
+In the backend I used Node.js and Express.js, in frontend I used React.js and for Database I used PostgreSQL.
+
+I created 2 tables users and creations. 
+
+I used OAuth + OpenId for authentication and authorization was built on the top of the data carried by JWT token.
+
+I implemented redis caching for storing AI generaed data for 24 hours and user's creations until the new creation is created.
+
+I implemented rate limiting so that API calls are not abused. Users can only send 10 request per minute.
+
+For Payment process I used stripe.
+
+When user wants to access AI service, the request is sent to the backend along with the JWT token, auth middleware verifies JWT token 
+to authenticate the user and check its plan, after that rate-limiter middleware checks if the user has done less than 10 requests 
+per minute or not. Then the controller function receives data, builds redis cache key using 'service-type, userId and normalized
+prompt', if the key is present then the data is sent from the cache otherwise the external api is called, results are stored in database
+new cache-key is created with the same result and then response goes to user.
+
+
+REDIS IMPLEMENTATION
+
+Redis is used to reduce latency so that frequently re-requested data is served from memory direct instead of database, 
+I stored AI-generated data for 24 hours and users creations until the new creation is created.
+
+Redis acts as in-memory cache layer between backend and External APIs as well as the database.
+
+When request comes, I first generate a deterministic cache key using the userId, service type and normalized prompt.
+If the key exists in redis then the response is returned immediately.
+If not, then the request goes to database, results are saved in redis and then returned to user.
+
+
+RATE LIMITING IMPLEMENTATION
+
+Rate limiting is implemented to prevent abusing of API calls, and ensure the fair usage across users.
+
+It is implemented as middleware in backend before the request reaches the service logic of APIs.
+
+There are rate-limiters for different services. Like only 3 resume review per minute, 10 articles per minute, and in general 200 
+requests per 100 minutes.
+
+I implemented rate limiting using express-rate-limit middleware. I created different limiters for different services based on cost. 
+For example, AI text generation is limited to 5 requests per minute, image processing to 3 requests per 2 minutes, and general 
+routes to 200 requests per 15 minutes. This prevents API abuse, protects server resources, and reduces AI API costs.
+
+Currently it is memory-based solution and will break in production
+
+
+OAuth FLOW
+
+When user clicks 'Continue with google', frontend redirected them to Google's OAuth consent.
+
+Google authenticates the user and returns 'code' along with identity claims as part of OpenId connect to the backend.
+
+The backend exchanges the code with the 'id_token'.
+
+The backend verifies the id_token, extracts email and provider_id and checks if the user already exists in the database.
+
+If not the new record of user is inserted in the users table.
+
+Then backend issues its own jwt token and sends it to the frontend with HTTP only cookie
+
+Plan-based authorization is done on the top of data carried by the JWT token which contains user's plan status.
+
+
+STRIPE PAYMENTS FLOW
+
+When a user clicks 'Upgrade to premium', backend creates checkout sessions and sends url to the frontend.
+
+Frontend then navigates to the url and the user make payment their.
+
+After payment's success, the stripe sends signature to the backend endpoint
+
+backend confirms the signature using stripe secret.
+
+After verification user's plan status is updated to premium.
+
+
+OOP USE
+
+Encapsulation: Separate modules for authentication, payment, AI services and middleware logic. They hide internal details like
+JWT verification, payment verification, service providing logic and redis caching
+
+Abstraction: Routes don't know how authorization middleware, rate limiters and others function works. They are just using it.
+
+Polymorphism: Same interface behave differently according to the plan of user.
+
+No Inheritance
+
+Composition: Application behaviour is built by composing multiple modules together such as middlewares and controller functions
+in routes, database and cloudinary configuration modules in server.js file, redis configuration in controllers.
+
+Why PostgreSQL
+Because I was handling structured and relational data and it requires strong consistency.
+I also needed ACID transaction for stripe payment gateway to process the payments successfully.

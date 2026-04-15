@@ -12,8 +12,6 @@ Google OAuth 2.0 (Authorization Code Flow)
 
 Custom JWT-based authentication
 
-No Clerk / no Auth0
-
 Secure backend-controlled identity
 
 💳 Subscriptions & Billing
