@@ -8,7 +8,7 @@ export const requireAuth = (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  try {       
+  try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.user = payload; // { id, plan, expires_at, picture }
     next();
