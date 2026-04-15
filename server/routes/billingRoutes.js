@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/create-checkout-session", requireAuth, createCheckoutSession)
 
-router.post(
+router.post(    
   "/webhook",
   express.raw({ type: "application/json" }),
   stripeWebhook

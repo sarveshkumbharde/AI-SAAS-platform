@@ -213,12 +213,12 @@ VITE_API_URL=http://localhost:3000
 ▶️ Running the Project Locally
 Backend
 cd server
-npm install
+npm install  
 npm run server
-
+    m
 Frontend
 cd client
-npm install
+npm install  m
  npm run dev
 
  Stripe CLI

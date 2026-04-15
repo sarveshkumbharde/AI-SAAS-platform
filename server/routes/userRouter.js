@@ -9,7 +9,7 @@ router.get('/google/callback', handleGoogleOAuthCallback )
 router.get("/me", requireAuth, getUser)
 router.post('/logout', requireAuth, generalLimiter, userRoutesLimiter, logout);
 router.get('/get-user-creations', requireAuth, generalLimiter, userRoutesLimiter, getUserCreations);
-router.get('/get-published-creations', requireAuth, generalLimiter, userRoutesLimiter, getPublishedCreations);
+router.get('/get-published-creations', requireAuth, generalLimiter, userRoutesLimiter, getPublishedCreations);   
 router.post('/toggle-like-creations', requireAuth, generalLimiter, userRoutesLimiter, toggleLikeCreation);
 
 export default router;
