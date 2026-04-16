@@ -14,7 +14,7 @@ const app = express();
 connectCloudinary();
 app.use(cors({
     origin: "http://localhost:5174",
-    credentials: true
+    credentials: true    
 }));
 
 app.use(cookieParser())   

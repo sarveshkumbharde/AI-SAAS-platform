@@ -348,7 +348,7 @@ export const removeImageBackground = async (req, res) => {
 
     // Clear user creations cache
     await cache.del(`user_creations:${userId}`);
-
+     
     res.json({
       success: true,
       content: secure_url,

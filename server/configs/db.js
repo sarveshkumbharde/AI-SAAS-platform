@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const sql = neon(process.env.DATABASE_URL);
-console.log("DB URL:", process.env.DATABASE_URL);
+console.log("DB URL:", process.env.DATABASE_URL);        
 
 async function testDB() {
   try {
