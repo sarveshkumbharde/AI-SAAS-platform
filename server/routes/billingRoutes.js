@@ -3,17 +3,17 @@ import { stripeWebhook, createCheckoutSession } from "../controllers/billingCont
 import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
-
+     
 router.post("/create-checkout-session", requireAuth, createCheckoutSession)
-
+           
 router.post(    
   "/webhook",
   express.raw({ type: "application/json" }),
   stripeWebhook
 );
-               
-export default router;
 
-// normal APIs → express.json()
+export default router;                  
+
+// normal APIs → express.json()     
 
 // webhook route → express.raw({ type: "application/json" }) 
