@@ -58,10 +58,10 @@ export const stripeWebhook = async (req, res) => {
     if (!userId) {
       console.error("❌ Missing userId in Stripe metadata");
       return res.status(400).json({ message: "Missing userId" });
-    }
+    }               
 
     // Grant 1-year premium access
-    await sql`
+    await sql`        
       UPDATE users
       SET plan = 'premium',
           expires_at = now() + interval '1 year'
@@ -74,3 +74,4 @@ export const stripeWebhook = async (req, res) => {
   // Always acknowledge receipt
   res.json({ received: true });
 };
+      

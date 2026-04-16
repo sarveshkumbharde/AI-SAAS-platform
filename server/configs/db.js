@@ -8,7 +8,7 @@ console.log("DB URL:", process.env.DATABASE_URL);
 
 async function testDB() {
   try {
-    const result = await sql`SELECT NOW()`;
+    const result = await sql`SELECT NOW()`;          
     console.log("DB connected:", result);
   } catch (err) {
     console.error("DB connection error:", err.message);
