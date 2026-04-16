@@ -72,6 +72,6 @@ export const stripeWebhook = async (req, res) => {
   }
 
   // Always acknowledge receipt
-  res.json({ received: true });
+  res.json({ received: true });         
 };
       

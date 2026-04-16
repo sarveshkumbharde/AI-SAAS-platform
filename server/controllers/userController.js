@@ -221,7 +221,7 @@ export const toggleLikeCreation = async (req, res) => {
 
     // Clear relevant caches when likes change
     await cache.del(`user_creations:${userId}`);
-
+      
     res.json({ success: true, message });
   } catch (error) {      
     res.json({ success: false, message: error.message });              
