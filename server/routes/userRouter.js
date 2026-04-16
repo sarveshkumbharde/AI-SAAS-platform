@@ -12,4 +12,4 @@ router.get('/get-user-creations', requireAuth, generalLimiter, userRoutesLimiter
 router.get('/get-published-creations', requireAuth, generalLimiter, userRoutesLimiter, getPublishedCreations);   
 router.post('/toggle-like-creations', requireAuth, generalLimiter, userRoutesLimiter, toggleLikeCreation);
 
-export default router;   
+export default router;                    

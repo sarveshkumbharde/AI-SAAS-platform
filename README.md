@@ -209,16 +209,16 @@ CLOUDINARY_URL=...
 
 Frontend (client/.env)
 VITE_API_URL=http://localhost:3000
-
+                            
 ▶️ Running the Project Locally
 Backend
 cd server
 npm install  
-npm run server
-    m
+npm run server             
+    
 Frontend
-cd client
-npm install  m
+cd client          
+npm install  
  npm run dev
 
  Stripe CLI

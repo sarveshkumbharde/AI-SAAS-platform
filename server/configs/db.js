@@ -6,7 +6,7 @@ dotenv.config();
 const sql = neon(process.env.DATABASE_URL);
 console.log("DB URL:", process.env.DATABASE_URL);        
 
-async function testDB() {
+async function testDB() {                     
   try {
     const result = await sql`SELECT NOW()`;          
     console.log("DB connected:", result);

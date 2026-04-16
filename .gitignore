@@ -34,7 +34,7 @@ Thumbs.db
 *.env.test.local
 *.env.production.local
 
-
+                               
 “I built a multi-service AI SaaS platform where authentication, billing, and usage limits are handled entirely on 
 the backend using custom OAuth, JWTs, Stripe webhooks, Redis caching, and rate limiting.”
 

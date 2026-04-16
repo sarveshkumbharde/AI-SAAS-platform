@@ -205,7 +205,7 @@ export const toggleLikeCreation = async (req, res) => {
     const currentLikes = creation.likes;
     const userIdStr = userId.toString();
     let updatedLikes;
-    let message;
+    let message;                   
 
     if (currentLikes.includes(userIdStr)) {
       updatedLikes = currentLikes.filter((user) => user !== userIdStr);
