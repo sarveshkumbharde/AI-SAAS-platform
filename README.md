@@ -217,15 +217,15 @@ npm install
 npm run server             
     
 Frontend
-cd client          
+cd client
 npm install  
  npm run dev
 
  Stripe CLI
- stripe listen --forward-to http://127.0.0.1:3000/billing/webhook
+ stripe listen --forward-to http://127.0.0.1:3000/billing/webhook         
 
 🧪 Test Cards (Stripe)
-Use:
+Use:          
 4242 4242 4242 4242
 
 🎯 Learning Outcomes

@@ -205,7 +205,7 @@ export const toggleLikeCreation = async (req, res) => {
     const currentLikes = creation.likes;
     const userIdStr = userId.toString();
     let updatedLikes;
-    let message;                   
+    let message;
 
     if (currentLikes.includes(userIdStr)) {
       updatedLikes = currentLikes.filter((user) => user !== userIdStr);
@@ -223,7 +223,7 @@ export const toggleLikeCreation = async (req, res) => {
     await cache.del(`user_creations:${userId}`);
 
     res.json({ success: true, message });
-  } catch (error) {
+  } catch (error) {      
     res.json({ success: false, message: error.message });
   }
 };
