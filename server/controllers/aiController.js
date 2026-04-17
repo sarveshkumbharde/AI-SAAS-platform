@@ -308,7 +308,7 @@ export const removeImageBackground = async (req, res) => {
     const { id: userId, plan, expires_at } = req.user;
     const image = req.file;
               
-    if (!isPremiumUser(req.user))
+    if (!isPremiumUser(req.user))           
       return res.json({
         success: false,
         message: "You are not authorized to use this feature",
