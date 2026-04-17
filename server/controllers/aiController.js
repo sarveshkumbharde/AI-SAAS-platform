@@ -307,7 +307,7 @@ export const removeImageBackground = async (req, res) => {
   try {
     const { id: userId, plan, expires_at } = req.user;
     const image = req.file;
-
+              
     if (!isPremiumUser(req.user))
       return res.json({
         success: false,
