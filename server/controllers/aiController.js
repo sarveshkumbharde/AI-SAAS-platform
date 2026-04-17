@@ -301,7 +301,7 @@ const createImageCacheKey = (userId, file, additionalData = "") => {
     .slice(0, 8);
 
   return `image_processing:${userId}:${fileHash}:${dataHash}`;
-};
+};          
 
 export const removeImageBackground = async (req, res) => {
   try {
@@ -316,7 +316,7 @@ export const removeImageBackground = async (req, res) => {
 
     // Create cache key based on file content
     const cacheKey = createImageCacheKey(userId, image, "background_removal");
-
+                       
     // Check cache
     const cachedImage = await cache.get(cacheKey);
     if (cachedImage) {
@@ -348,7 +348,7 @@ export const removeImageBackground = async (req, res) => {
 
     // Clear user creations cache
     await cache.del(`user_creations:${userId}`);
-          
+
     res.json({
       success: true,
       content: secure_url,
