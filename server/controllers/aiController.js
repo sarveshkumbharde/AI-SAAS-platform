@@ -303,7 +303,7 @@ const createImageCacheKey = (userId, file, additionalData = "") => {
   return `image_processing:${userId}:${fileHash}:${dataHash}`;
 };          
 
-export const removeImageBackground = async (req, res) => {
+export const removeImageBackground = async (req, res) => {        
   try {
     const { id: userId, plan, expires_at } = req.user;
     const image = req.file;
