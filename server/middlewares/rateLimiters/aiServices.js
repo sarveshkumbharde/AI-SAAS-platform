@@ -10,10 +10,10 @@ export const aiTextLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false
-});
+});        
 
-// Slightly more generous for resume review
-export const resumeReviewLimiter = rateLimit({
+// Slightly more generous for resume review  
+export const resumeReviewLimiter = rateLimit({              
   windowMs: 2 * 60 * 1000, // 2 minutes
   max: 3, // 3 resume reviews per 2 minutes per user
   message: {
