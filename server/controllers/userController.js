@@ -78,12 +78,10 @@ export const handleGoogleOAuthCallback = async (req, res) => {
     const appToken = jwt.sign(
       {
         id: user.id,
-        plan: user.plan,
-        expires_at: user.expires_at,
         picture,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "30m" },
+      { expiresIn: "30d" },
     );
 
     console.log("OAuth: redirecting to frontend");
@@ -108,10 +106,10 @@ export const getUser = async (req, res) => {
     FROM users
     WHERE id = ${req.user.id}
   `;
-  console.log("picture", req.user.picture);
+  
   const user = {
     ...dbUser,
-    picture: req.user.picture, // 🔥 THIS is what was missing
+    picture: req.user.picture,
   };
   res.json(user);
 };
@@ -129,7 +127,7 @@ export const logout = (req, res) => {
 
 export const getUserCreations = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const { id: userId } = req.user;
     const cacheKey = `user_creations:${userId}`;
 
     // Check cache
@@ -194,7 +192,7 @@ export const getPublishedCreations = async (req, res) => {
 
 export const toggleLikeCreation = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const { id: userId } = req.user;
     const { id } = req.body;
 
     const [creation] = await sql`SELECT * FROM creations WHERE id=${id}`; //destructuring works because query returns only one row, otherwise it fails

@@ -9,8 +9,8 @@ import { cache } from "../utils/cache.js";
 import crypto from "crypto";
 
 const AI = new OpenAI({
-  apiKey: "ollama", // dummy
-  baseURL: "http://localhost:11434/v1",
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
 const isPremiumUser = (user) => {
@@ -60,7 +60,7 @@ export const generateArticle = async (req, res) => {
 
     // If not cached, call Gemini API
     const response = await AI.chat.completions.create({
-      model: "llama3",
+      model: "llama-3.1-8b-instant",
       messages: [
         {
           role: "user",
@@ -89,72 +89,7 @@ export const generateArticle = async (req, res) => {
   }
 };
 
-export const generateBlogTitle = async (req, res) => {
-  try {
-    const { id: userId, plan, expires_at } = req.user;
-    const { prompt, length } = req.body;
 
-    const [{ free_usage }] = await sql`
-  SELECT COUNT(*)::int AS free_usage
-  FROM creations
-  WHERE user_id = ${userId}
-  AND created_at > now() - interval '1 day'
-`;
-
-    if (!isPremiumUser(req.user) && free_usage >= 10) {
-      return res.json({
-        success: false,
-        message: "Limit reached. Upgrade to continue",
-      });
-    }
-
-    // Cache key for blog titles
-    // const cacheKey = `blog_title:${userId}:${Buffer.from(prompt).toString("base64").slice(0, 30)}`;
-
-    const promptHash = crypto.createHash("md5").update(prompt).digest("hex");
-    const cacheKey = `blog_title:${userId}:${promptHash}`;
-
-    // Check cache
-    const cachedTitle = await cache.get(cacheKey);
-    if (cachedTitle) {
-      console.log("✅ Serving blog title from cache");
-      return res.json({
-        success: true,
-        content: cachedTitle,
-        cached: true,
-      });
-    }
-
-    const response = await AI.chat.completions.create({
-      model: "llama3",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 100,
-    });
-
-    const content = response.choices[0].message.content;
-
-
-    await sql`INSERT INTO creations (user_id, prompt, content, type)
-    VALUES (${userId}, ${prompt}, ${content}, 'blog-title')`;
-
-    // Cache for 24 hours
-    await cache.set(cacheKey, content, 24 * 60 * 60);
-
-    // Clear user creations cache
-    await cache.del(`user_creations:${userId}`);
-
-    res.json({ success: true, content, cached: false });
-  } catch (error) {
-    console.log(error.message);
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
 
 export const resumeReview = async (req, res) => {
   try {
@@ -192,10 +127,11 @@ export const resumeReview = async (req, res) => {
       });
     }
 
-    const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, areas for improvements. Resume Content:\n\n${pdfData.text}`;
+    const truncatedText = pdfData.text.slice(0, 20000); // Truncate to avoid context window limits
+    const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, areas for improvements. Resume Content:\n\n${truncatedText}`;
 
     const response = await AI.chat.completions.create({
-      model: "llama3",
+      model: "llama-3.1-8b-instant",
       messages: [
         {
           role: "user",
@@ -230,7 +166,7 @@ export const generateImage = async (req, res) => {
     const { id: userId, plan, expires_at } = req.user;
     const { prompt, length, publish } = req.body;
 
-    if (isPremiumUser(req.user))
+    if (!isPremiumUser(req.user))
       return res.json({
         success: false,
         message: "You are not authorized to use this feature",
@@ -250,17 +186,13 @@ export const generateImage = async (req, res) => {
       });
     }
 
-    const formData = new FormData();
-    formData.append("prompt", prompt);
-    const { data } = await axios.post(
-      "https://clipdrop-api.co/text-to-image/v1",
-      formData,
+    const encodedPrompt = encodeURIComponent(prompt);
+    // Fetch generated image from Pollinations.ai (Free, no API key needed)
+    const { data } = await axios.get(
+      `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`,
       {
-        headers: {
-          "x-api-key": process.env.CLIPDROP_API_KEY,
-        },
         responseType: "arraybuffer",
-      },
+      }
     );
 
     const base64Image = `data:image/png;base64,${Buffer.from(data, "binary").toString("base64")}`;
@@ -360,59 +292,4 @@ export const removeImageBackground = async (req, res) => {
   }
 };
 
-export const removeImageObject = async (req, res) => {
-  try {
-    const { id: userId, plan, expires_at } = req.user;
-    const image = req.file;
-    const { object } = req.body;
 
-    if (!isPremiumUser(req.user))
-      return res.json({
-        success: false,
-        message: "You are not authorized to use this feature",
-      });
-
-    // Create cache key based on file content AND object to remove
-    const cacheKey = createImageCacheKey(
-      userId,
-      image,
-      `object_removal:${object}`,
-    );
-
-    // Check cache
-    const cachedImage = await cache.get(cacheKey);
-    if (cachedImage) {
-      console.log("✅ Serving object removal from cache");
-      return res.json({
-        success: true,
-        content: cachedImage,
-        cached: true,
-      });
-    }
-
-    const { public_id } = await cloudinary.uploader.upload(image.path);
-
-    const image_url = cloudinary.url(public_id, {
-      transformation: [{ effect: `gen_remove: ${object}` }],
-      resource_type: "image",
-    });
-
-    await sql`INSERT INTO creations (user_id, prompt, content, type)
-    VALUES (${userId}, ${`Remove ${object} from image`}, ${image_url}, 'image')`;
-
-    // Cache for 1 hour
-    await cache.set(cacheKey, image_url, 60 * 60);
-
-    // Clear user creations cache
-    await cache.del(`user_creations:${userId}`);
-
-    res.json({
-      success: true,
-      content: image_url,
-      cached: false,
-    });
-  } catch (error) {
-    console.log(error.message);
-    res.status(400).json({ success: false, message: error.message });
-  }
-};

@@ -1,5 +1,5 @@
-I built a multiservice AI platform where users access services like Article generation, Blog generation, 
-Image generation, Background removal, Object removal, resume review. It is plan-based access control system where free user gets 
+I built a multiservice AI platform where users access services like Article generation, 
+Image generation, Background removal, resume review. It is plan-based access control system where free user gets 
 10 free usage daily for 2 services. Premium user gets unlimited usage till 1 year. 
 
 In the backend I used Node.js and Express.js, in frontend I used React.js and for Database I used PostgreSQL.

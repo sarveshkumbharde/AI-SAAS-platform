@@ -10,9 +10,34 @@ const PaymentSuccess = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let timeoutId;
     const syncPlan = async () => {
       try {
-        await refreshUser(); 
+        // Poll for up to 10 seconds to allow webhook to process
+        let attempts = 0;
+        let isUpdated = false;
+        
+        while (attempts < 10 && !isUpdated) {
+          await refreshUser();
+          
+          // We need to wait for AuthContext to update the state, but we can also
+          // just fetch manually to be absolutely sure without relying on context state delay
+          const { data } = await api.get("/api/user/me");
+          
+          if (data && data.plan === 'premium') {
+            await refreshUser(); // Final sync with context
+            isUpdated = true;
+            break;
+          }
+          
+          await new Promise(r => setTimeout(r, 1000));
+          attempts++;
+        }
+        
+        if (!isUpdated) {
+          setError("Payment confirmed, but your plan hasn't updated yet. Please refresh the page in a minute.");
+        }
+        
         setLoading(false);
       } catch (err) {
         setError("Failed to verify subscription status");
@@ -21,6 +46,8 @@ const PaymentSuccess = () => {
     };
 
     syncPlan();
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   if (loading) {

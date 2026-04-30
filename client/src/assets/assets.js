@@ -29,13 +29,6 @@ export const AiToolsData = [
         path: '/ai/write-article'
     },
     {
-        title: 'Blog Title Generator',
-        description: 'Find the perfect, catchy title for your blog posts with our AI-powered generator.',
-        Icon: Hash,
-        bg: { from: '#B153EA', to: '#E549A3' },
-        path: '/ai/blog-titles'
-    },
-    {
         title: 'AI Image Generation',
         description: 'Create stunning visuals with our AI image generation tool, Experience the power of AI ',
         Icon: Image,
@@ -48,13 +41,6 @@ export const AiToolsData = [
         Icon: Eraser,
         bg: { from: '#F76C1C', to: '#F04A3C' },
         path: '/ai/remove-background'
-    },
-    {
-        title: 'Object Removal',
-        description: 'Remove unwanted objects from your images seamlessly with our AI object removal tool.',
-        Icon: Scissors,
-        bg: { from: '#5C6AF1', to: '#427DF5' },
-        path: '/ai/remove-object'
     },
     {
         title: 'Resume Reviewer',

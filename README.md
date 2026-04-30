@@ -3,152 +3,89 @@
 QuickAI is a full-stack AI SaaS platform built for learning real-world production architecture.
 It implements custom authentication, subscription billing, and usage enforcement without relying on third-party auth providers like Clerk.
 
-This project focuses on how real SaaS products are built, not shortcuts.
+This project focuses on how real SaaS products are built, with a heavy emphasis on horizontal scalability and state management.
 
 ✨ Features
 🔐 Authentication
-
-Google OAuth 2.0 (Authorization Code Flow)
-
-Custom JWT-based authentication
-
-Secure backend-controlled identity
+- Google OAuth 2.0 (Authorization Code Flow)
+- Custom JWT-based authentication
+- **Real-time Identity Verification**: JWT serves as a session snapshot, but the backend performs real-time database lookups for plan state and permissions.
 
 💳 Subscriptions & Billing
-
-Stripe Checkout (test mode)
-
-Yearly Premium plan
-
-Stripe Webhooks (source of truth)
-
-Lazy expiry using expires_at
-
-Local testing with Stripe CLI
+- Stripe Checkout integration
+- Yearly Premium plan
+- Stripe Webhooks (source of truth for billing events)
+- Lazy expiry management using `expires_at`
 
 🤖 AI Tools
-
-Article generation
-
-Blog title generation
-
-Image generation
-
-Background removal
-
-Object removal
-
-Resume review (PDF)
-
-Community gallery with likes
+- **Article Generation**: Generate long-form content using AI.
+- **Image Generation**: Create stunning visuals from text prompts.
+- **Background Removal**: Professional-grade image background extraction.
+- **Resume Review**: AI-powered feedback on PDF resumes.
+- **Community Gallery**: Showcase public creations with a social "like" system.
 
 ⚙️ Architecture Highlights
-
-JWT is a session snapshot, DB is the source of truth
-
-Webhooks update DB, frontend refreshes state
-
-No cron jobs needed for plan expiry
-
-Rate limiting for protected routes
-
-Redis caching for performance
+- **Stateless Authentication with Stateful Verification**: Issues JWTs for sessions, but verifies user status (plan, expiry, bans) against the database on every protected request for maximum security.
+- **Distributed Rate Limiting**: Implemented via Redis to ensure consistent usage enforcement across multiple server instances (horizontally scalable).
+- **Webhook-Driven State**: Stripe webhooks serve as the authoritative source for subscription state, ensuring the local database is always synced with billing.
+- **Zero-Cron Expiry**: Plan expiration is handled via comparison logic (`expires_at`), eliminating the need for complex background workers for basic billing enforcement.
 
 🧠 Tech Stack
 Frontend
-
-React (Vite)
-
-React Router
-
-Axios (with interceptors)
-
-Tailwind CSS
-
-Context API (AuthContext)
+- React (Vite)
+- React Router & Axios (with interceptors)
+- Tailwind CSS
+- Context API (Auth & Plan State)
 
 Backend
-
-Node.js
-
-Express
-
-PostgreSQL (Neon)
-
-Stripe API
-
-Redis
-
-Cloudinary
-
-Google OAuth
-
-JWT
+- Node.js & Express
+- PostgreSQL (Neon) for persistent storage
+- Redis for distributed caching and rate limiting
+- Stripe API for payment processing
+- Cloudinary for media storage
+- Google OAuth & JWT for identity
 
 🗂️ Project Structure
 
 quickai/
 ├── client/              # React frontend
 │   ├── src/
-│   │   ├── context/     # AuthContext (JWT-based)
-│   │   ├── pages/
-│   │   ├── components/
+│   │   ├── context/     # AuthContext (Real-time state)
+│   │   ├── pages/       # Tool-specific pages
+│   │   ├── components/  # Reusable UI components
 │   │   └── utils/axios.js
 │   └── .env
 │
 ├── server/              # Express backend
-│   ├── controllers/
-│   ├── routes/
-│   ├── middlewares/
-│   ├── configs/
+│   ├── controllers/     # AI and User logic
+│   ├── routes/          # API endpoints
+│   ├── middlewares/     # Auth & Redis-backed rate limiters
+│   ├── configs/         # DB, Redis, and Stripe configs
 │   └── server.js
 │
 └── README.md
 
 🔑 Authentication Flow (Google OAuth)
-
-User clicks Get Started
-
-Frontend redirects to /api/user/google
-
-Backend redirects to Google OAuth
-
-Google redirects back to /api/user/google/callback
-
-Backend:
-
-Exchanges code for token
-
-Creates / finds user
-
-Issues JWT
-
-Backend redirects to frontend /oauth-success
-
-Frontend stores JWT and enters app
+1. User clicks "Get Started"
+2. Frontend redirects to `/api/user/google`
+3. Backend initiates Google OAuth 2.0 flow
+4. Google redirects back to `/api/user/google/callback` with a code
+5. Backend:
+   - Exchanges code for user info
+   - Synchronizes user in PostgreSQL
+   - Issues a JWT containing core user ID
+6. Backend redirects to frontend `/oauth-success`
+7. Frontend stores JWT and hydrates application state
 
 💳 Subscription Flow (Stripe)
-
-User clicks Upgrade to Premium
-
-Frontend calls /billing/create-checkout-session
-
-Stripe Checkout opens
-
-Payment succeeds
-
-Stripe Webhook fires
-
-Backend updates:
-plan = 'premium'
-expires_at = now() + interval '1 year'
-
-plan = 'premium'
-expires_at = now() + interval '1 year'
-
-Frontend hits /api/user/me to refresh plan
-
-UI updates instantly
+1. User clicks "Upgrade to Premium"
+2. Frontend calls `/billing/create-checkout-session`
+3. Stripe Checkout handles the payment securely
+4. Upon success, Stripe Webhook notifies the backend
+5. Backend updates:
+   - `plan = 'premium'`
+   - `expires_at = now() + 1 year`
+6. Frontend refreshes user state via `/api/user/me` for instant UI update
 
 🧾 Database Schema
 
@@ -167,7 +104,7 @@ CREATE TABLE creations (
   user_id INT REFERENCES users(id),
   prompt TEXT NOT NULL,
   content TEXT NOT NULL,
-  type TEXT NOT NULL,
+  type TEXT NOT NULL, -- 'article', 'image', etc.
   publish BOOLEAN DEFAULT FALSE,
   likes TEXT[] DEFAULT '{}',
   created_at TIMESTAMP DEFAULT now(),
@@ -175,23 +112,17 @@ CREATE TABLE creations (
 );
 
 🔔 Stripe Webhooks (Local Development)
-
 Stripe webhooks are handled via Stripe CLI.
-
-Start Stripe CLI
-stripe listen --forward-to http://127.0.0.1:3000/billing/webhook
-
-Copy the generated whsec_... and set:
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-⚠️ Restart backend after updating webhook secret.
+1. Start Stripe CLI:
+   `stripe listen --forward-to http://127.0.0.1:3000/billing/webhook`
+2. Copy the generated `whsec_...` and set it in your `.env`.
 
 🔐 Environment Variables
 
 Backend (server/.env)
-
 PORT=3000
 DATABASE_URL=postgresql://...
+REDIS_URL=redis://... # Required for rate limiting
 JWT_SECRET=your_secret
 
 GOOGLE_CLIENT_ID=...
@@ -199,62 +130,34 @@ GOOGLE_CLIENT_SECRET=...
 GOOGLE_REDIRECT_URI=http://localhost:3000/api/user/google/callback
 
 STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PRICE_ID=price_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-FRONTEND_URL=http://localhost:5174
-REDIS_URL=...
 CLOUDINARY_URL=...
-
 
 Frontend (client/.env)
 VITE_API_URL=http://localhost:3000
-                            
+
 ▶️ Running the Project Locally
-Backend
+**Backend**
 cd server
-npm install  
-npm run server             
-    
-Frontend
+npm install
+npm run server
+
+**Frontend**
 cd client
-npm install  
- npm run dev
+npm install
+npm run dev
 
- Stripe CLI
- stripe listen --forward-to http://127.0.0.1:3000/billing/webhook         
-
-🧪 Test Cards (Stripe)
-Use:          
-4242 4242 4242 4242
+**Stripe CLI**
+stripe listen --forward-to http://127.0.0.1:3000/billing/webhook
 
 🎯 Learning Outcomes
-
-This project teaches:
-
-Real OAuth flow
-
-JWT limitations & refresh strategies
-
-Webhook-based billing
-
-Proper route protection
-
-Frontend–backend responsibility separation
-
-SaaS-grade architecture decisions
-
-📌 Future Improvements
-
-Refresh tokens
-
-Cancel subscription flow
-
-Stripe customer portal
-
-Usage analytics
-
-Deployment (Docker / Fly.io / Railway)
+This project demonstrates:
+- **Production-Grade Auth**: Moving beyond simple JWTs to real-time database-backed session verification.
+- **Horizontal Scalability**: Using Redis to synchronize state (like rate limits) across multiple app instances.
+- **Reliable Billing**: Implementing the "Source of Truth" pattern with webhooks.
+- **Resource Management**: Tiered rate limiting for different services (Text AI vs. Image AI).
+- **Clean Architecture**: Separation of concerns between controllers, middlewares, and service configurations.
 
 👤 Author
 

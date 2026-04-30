@@ -1,6 +1,6 @@
 import express from 'express';
 import { requireAuth } from '../middlewares/auth.js';
-import { generateArticle, generateBlogTitle, generateImage, removeImageBackground, resumeReview } from '../controllers/aiController.js';
+import { generateArticle, generateImage, removeImageBackground, resumeReview } from '../controllers/aiController.js';
 import { upload } from '../middlewares/multer.js';
 import { 
   aiTextLimiter, 
@@ -12,14 +12,14 @@ const aiRouter = express.Router();
 
 // AI Text Generation - Strict limits
 aiRouter.post('/generate-article', requireAuth, aiTextLimiter, generateArticle);              
-aiRouter.post('/generate-blog-title', requireAuth, aiTextLimiter, generateBlogTitle);
+
   
 // Image Generation - Strict limits              
 aiRouter.post('/generate-image', requireAuth, imageProcessingLimiter, generateImage);      
 
 // Image Processing - Strict limits             
 aiRouter.post('/remove-image-background', requireAuth, imageProcessingLimiter, upload.single('image'), removeImageBackground);
-aiRouter.post('/remove-image-object', requireAuth, imageProcessingLimiter, upload.single('image'), removeImageBackground);
+
 
 // Resume Review - Moderate limits
 aiRouter.post('/resume-review', requireAuth, resumeReviewLimiter, upload.single('resume'), resumeReview);

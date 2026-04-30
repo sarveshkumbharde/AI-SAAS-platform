@@ -18,10 +18,8 @@ import Plan from "../pages/Plan";
 const navItems = [
   { to: "/ai", label: "Dashboard", Icon: House },
   { to: "/ai/write-article", label: "Write Article", Icon: SquarePen },
-  { to: "/ai/blog-titles", label: "Blog Titles", Icon: Hash },
   { to: "/ai/generate-images", label: "Generate Images", Icon: Image },
   { to: "/ai/remove-background", label: "Remove Background", Icon: Eraser },
-  { to: "/ai/remove-object", label: "Remove Object", Icon: Scissors },
   { to: "/ai/review-resume", label: "Review Resume", Icon: FileText },
   { to: "/ai/community", label: "Community", Icon: User },
   { to: "/ai/plan", label: "Plan", Icon: Brain}
