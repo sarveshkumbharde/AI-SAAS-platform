@@ -13,7 +13,7 @@ const app = express();
 
 connectCloudinary();
 app.use(cors({
-    origin: "http://localhost:5174",
+    origin: process.env.FRONTEND_URL,
     credentials: true    
 }));
 

@@ -88,8 +88,8 @@ export const handleGoogleOAuthCallback = async (req, res) => {
 
     res.cookie("auth_token", appToken, {
       httpOnly: true,
-      secure: false, // true in production (HTTPS)
-      sameSite: "lax", // or "none" if cross-site
+      secure: true, // true in production (HTTPS)
+      sameSite: "None", // or "none" if cross-site
       maxAge: 30 * 60 * 1000, // 30 minutes
     });
 
@@ -117,8 +117,8 @@ export const getUser = async (req, res) => {
 export const logout = (req, res) => {
   res.clearCookie("auth_token", {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: true,
+    sameSite: "None",
     maxAge: 30 * 60 * 1000,
   });
 
