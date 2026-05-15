@@ -23,8 +23,9 @@ const Navbar = () => {
       {!user ? (
         <button
           onClick={() =>
-            (window.location.href = "http://localhost:3000/api/user/google")
+            (window.location.href = `${import.meta.env.VITE_API_URL}/api/user/google`)
           }
+
           className="flex items-center gap-2 rounded-full text-sm cursor-pointer bg-primary text-white px-10 py-2.5"
         >
           Get Started <ArrowRight className="w-4 h-4" />
